@@ -1,4 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
+
+#######################################
+#      Live FFT decomposition code
+#
+#   Cloned from https://github.com/ricklupton/livefft
+#
+#   Modified to make it do what we want
+#######################################
 
 from __future__ import division
 
@@ -6,10 +14,8 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 from scipy.signal import filtfilt
 from numpy import nonzero, diff
-
 import pyqtgraph as pg
 from recorder import SoundCardDataSource
-
 
 # Based on function from numpy 1.8
 def rfftfreq(n, d=1.0):
@@ -64,7 +70,7 @@ def fft_slices(x):
 
     # And scale by frequency to get a result in (dB/Hz)
     # Pxx /= Fs
-    return Pxx ** 0.5
+    return np.sqrt(Pxx)
 
 
 def find_peaks(Pxx):
@@ -101,7 +107,7 @@ def fft_buffer(x):
 
     # And scale by frequency to get a result in (dB/Hz)
     # Pxx /= Fs
-    return Pxx ** 0.5
+    return np.sqrt(Pxx) 
 
 
 class LiveFFTWindow(pg.GraphicsWindow):
