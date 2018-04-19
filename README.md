@@ -13,6 +13,6 @@ by Deepak, Rashmi and Sarah
 - numpy
 - scipy
 - pyaudio
-- pyqtgraph (optional)
+- pyqtgraph (optional, will not be needed in final version)
 - sklearn
 
