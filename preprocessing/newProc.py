@@ -1,12 +1,20 @@
 #!/usr/bin/env python2.7
 
-#######################################
-#      Live FFT decomposition code
+###################################################
+# Live Non Negative Matrix Decomposition
+# for Elderly Fall Detection
 #
-#   Cloned from https://github.com/ricklupton/livefft
+#  We perfom a low pass filter on the F domain by using the 
+#  Butterworth filter coefficients and then we compute the 
+#  energy of the low frequency signature harmonics to detect
+#  whether a fall occurred.
 #
-#   Modified to make it do what we want
-#######################################
+#      Original code cloned from 
+#  https://github.com/ricklupton/livefft
+#
+#  Modified to make it do what we want
+#
+###################################################
 
 from __future__ import division
 
@@ -65,12 +73,6 @@ def rfftfreq(n, d=1.0):
 
 
 def fft_slices(x):
-#########################################
-# This function was modified in order to 
-# get the power spectrum from the FFT 
-# decomposed signal. 
-#########################################
-
     Nslices, Npts = x.shape
     window = np.hanning(Npts)
 
@@ -94,11 +96,13 @@ def find_peaks(Pxx):
 # Butterworth filter with a cutoff of 0.125 Nyquist
 ##################################################
     # filter parameters
-    #b, a = [0.01], [1, -0.99] 
+    #b, a = [0.01], [1, -0.99] #original parameters 
     b, a= signal.butter(ORDER, [LOWCUT/FS, HIGHCUT/FS], btype= 'low') #Butterworth filter
     Pxx_smooth = filtfilt(b, a, abs(Pxx))
     peakedness = abs(Pxx) / Pxx_smooth
-
+    model= NMF(n_components=2, init='random', random_state=0)
+    W= model.fit_transform(Pxx_smooth)
+    H= model.components_
     # find peaky regions which are separated by more than 10 samples
     peaky_regions = nonzero(peakedness > 1)[0]
     edge_indices = nonzero(diff(peaky_regions) > 10)[0]  # RH edges of peaks
@@ -110,7 +114,7 @@ def find_peaks(Pxx):
     for i in range(len(edges) - 1):
         j, k = edges[i], edges[i+1]
         peaks.append(j + np.argmax(peakedness[j:k]))
-    return peaks
+    return peaks, W, H 
 
 
 def fft_buffer(x):
@@ -196,7 +200,8 @@ class LiveFFTWindow(pg.GraphicsWindow):
 
     def plotPeaks(self, Pxx):
         # find peaks bigger than a certain threshold
-        peaks = [p for p in find_peaks(Pxx) if Pxx[p] > 0.3]
+        peaks1, W, H= find_peaks(Pxx)
+        peaks = [p for p in peaks1 if Pxx[p] > 0.3]
 
         if self.logScale:
             Pxx = 20*np.log10(Pxx)

@@ -1,5 +1,0 @@
-pyside
-numpy
-scipy
-pyaudio
-pyqtgraph
