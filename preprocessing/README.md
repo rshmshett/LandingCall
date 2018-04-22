@@ -1,6 +1,6 @@
 ## Fall Detection Using Signal Processing 
 
-<br> This code was inspired in livefft.py developed by https://github.com/ricklupton/livefft </br>
+<br> This code was inspired in livefft.py developed by https://github.com/ricklupton/livefft, which is a GUI-based python oscilloscope that takes in live data coming from a microphone and plots its frequencies and signals.  It also makes use of python_speech_features found in https://github.com/jameslyons/python_speech_features </br>
 
 <br>This code uses a low-pass Butterworth filter, decomposes the frequency spectrum in its MFCC coefficients and applies Non-negative Matrix Decomposition on the softened frequency spectrum (V \approx W H), it uses then the H matrix value to threshold whether it is a fall (two points of contact with the ground) and whether it is not a fall (one or 0 points of contact with the ground) and spits out True when it detects a fall.</br> 
 
