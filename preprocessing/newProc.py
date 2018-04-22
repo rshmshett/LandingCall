@@ -20,6 +20,7 @@ from __future__ import division
 
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
+from scipy import signal
 from scipy.signal import filtfilt
 from numpy import nonzero, diff
 import pyqtgraph as pg
@@ -30,8 +31,6 @@ from sklearn.decomposition import NMF
 #Global variable declarations:
 FILTER_CUTOFF= 0.125 # 0.125 Nyquist
 FS = 44000          # sampling rate
-LOWCUT= 0           #lowest frequency
-HIGHCUT= 1          # larger frequency
 ORDER = 5           #order of the low pass filter
 
 # Based on function from numpy 1.8
@@ -96,11 +95,12 @@ def find_peaks(Pxx):
 # Butterworth filter with a cutoff of 0.125 Nyquist
 ##################################################
     # filter parameters
-    #b, a = [0.01], [1, -0.99] #original parameters 
-    b, a= signal.butter(ORDER, [LOWCUT/FS, HIGHCUT/FS], btype= 'low') #Butterworth filter
+    #b, a = [0.01], [1, -0.99] #original parameters
+    b, a= signal.butter(ORDER, 0.5, btype= 'low') #Butterworth filter
     Pxx_smooth = filtfilt(b, a, abs(Pxx))
+    
     peakedness = abs(Pxx) / Pxx_smooth
-    model= NMF(n_components=2, init='random', random_state=0)
+    model= NMF(n_components=1, init='random', random_state=0)
     W= model.fit_transform(Pxx_smooth)
     H= model.components_
     # find peaky regions which are separated by more than 10 samples
@@ -109,13 +109,12 @@ def find_peaks(Pxx):
     edges = [0] + [(peaky_regions[i] + 5) for i in edge_indices]
     if len(edges) < 2:
         edges += [len(Pxx) - 1]
-
+    
     peaks = []
     for i in range(len(edges) - 1):
         j, k = edges[i], edges[i+1]
         peaks.append(j + np.argmax(peakedness[j:k]))
     return peaks, W, H 
-
 
 def fft_buffer(x):
     window = np.hanning(x.shape[0])
@@ -133,14 +132,13 @@ def fft_buffer(x):
     # Pxx /= Fs
     return np.sqrt(Pxx) 
 
-
 class LiveFFTWindow(pg.GraphicsWindow):
     def __init__(self, recorder):
         super(LiveFFTWindow, self).__init__(title="Live FFT")
         self.recorder = recorder
         self.paused = False
         self.logScale = False
-        self.showPeaks = False
+        self.showPeaks = True
         self.downsample = True
 
         # Setup plots
@@ -200,9 +198,9 @@ class LiveFFTWindow(pg.GraphicsWindow):
 
     def plotPeaks(self, Pxx):
         # find peaks bigger than a certain threshold
-        peaks1, W, H= find_peaks(Pxx)
-        peaks = [p for p in peaks1 if Pxx[p] > 0.3]
-
+        peaks1, W, H = find_peaks(Pxx)
+        peaks = [p for p in peaks1 if Pxx[p] > 0.05]
+         
         if self.logScale:
             Pxx = 20*np.log10(Pxx)
 
