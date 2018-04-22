@@ -26,7 +26,7 @@ from numpy import nonzero, diff
 import pyqtgraph as pg
 from recorder import SoundCardDataSource
 from sklearn.decomposition import NMF
-
+from python_speech_features import mfcc
 
 #Global variable declarations:
 FILTER_CUTOFF= 0.125 # 0.125 Nyquist
@@ -98,10 +98,12 @@ def find_peaks(Pxx):
     #b, a = [0.01], [1, -0.99] #original parameters
     b, a= signal.butter(ORDER, 0.5, btype= 'low') #Butterworth filter
     Pxx_smooth = filtfilt(b, a, abs(Pxx))
-    
+    #mfccCoeff= mfcc(Pxx_smooth, samplerate= FS)  
     peakedness = abs(Pxx) / Pxx_smooth
     model= NMF(n_components=1, init='random', random_state=0)
-    W= model.fit_transform(Pxx_smooth)
+    res= Pxx_smooth.reshape(-1, 1)
+    res[res<0]= 0 #substitute negative values by 0 
+    W= model.fit_transform(res)
     H= model.components_
     # find peaky regions which are separated by more than 10 samples
     peaky_regions = nonzero(peakedness > 1)[0]
