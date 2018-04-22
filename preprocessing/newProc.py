@@ -105,6 +105,8 @@ def find_peaks(Pxx):
     res[res<0]= 0 #substitute negative values by 0 
     W= model.fit_transform(res)
     H= model.components_
+    if H>0.2:
+        print "True" 
     # find peaky regions which are separated by more than 10 samples
     peaky_regions = nonzero(peakedness > 1)[0]
     edge_indices = nonzero(diff(peaky_regions) > 10)[0]  # RH edges of peaks
