@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/fall2">
+
+    <RelativeLayout
+        android:layout_width="379dp"
+        android:layout_height="571dp"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="16dp">
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignTop="@+id/txtPhone"
+            android:fontFamily="sans-serif-condensed"
+            android:text="Enter Phone Number: " />
+
+        <EditText
+            android:id="@+id/txtPhone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textView5"
+            android:layout_marginLeft="12dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="34dp"
+            android:layout_toEndOf="@+id/textView3"
+            android:layout_toRightOf="@+id/textView3"
+            android:ems="10"
+            android:inputType="phone"
+            android:textColor="@android:color/black" />
+
+        <TextView
+            android:id="@+id/textView5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="12dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="31dp"
+            android:fontFamily="serif"
+            android:text="Set Emergency Contact"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/txtMessage"
+            android:layout_alignLeft="@+id/textView5"
+            android:layout_alignStart="@+id/textView5"
+            android:layout_marginBottom="40dp"
+            android:fontFamily="serif"
+            android:text="Set Emergency Message"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/textView7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/txtMessage"
+            android:layout_alignBottom="@+id/txtMessage"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:fontFamily="sans-serif-condensed"
+            android:text="Enter message: " />
+
+        <EditText
+            android:id="@+id/txtMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignEnd="@+id/txtPhone"
+            android:layout_alignRight="@+id/txtPhone"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="21dp"
+            android:layout_marginRight="21dp"
+            android:ems="10"
+            android:inputType="textMultiLine"
+            android:textColor="@android:color/black" />
+
+        <Button
+            android:id="@+id/btnSubmit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/txtMessage"
+            android:layout_marginTop="60dp"
+            android:layout_toLeftOf="@+id/txtPhone"
+            android:layout_toStartOf="@+id/txtPhone"
+            android:onClick="btnSubmit_clicked"
+            android:text="Save" />
+
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/btnSubmit"
+            android:layout_alignBottom="@+id/btnSubmit"
+            android:layout_alignEnd="@+id/txtMessage"
+            android:layout_alignRight="@+id/txtMessage"
+            android:onClick="btnBack_clicked"
+            android:text="Back" />
+
+        <Button
+            android:id="@+id/btnTest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/btnSubmit"
+            android:layout_marginTop="18dp"
+            android:layout_toEndOf="@+id/textView7"
+            android:layout_toRightOf="@+id/textView7"
+            android:onClick="btnTest_clicked"
+            android:text="Send Test Message" />
+    </RelativeLayout>
+</android.support.constraint.ConstraintLayout>

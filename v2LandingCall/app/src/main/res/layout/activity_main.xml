@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/elderly"
+    tools:context="com.example.rshms.v2landingcall.MainActivity">
+
+    <RelativeLayout
+        android:layout_width="386dp"
+        android:layout_height="424dp"
+        tools:layout_editor_absoluteX="12dp"
+        tools:layout_editor_absoluteY="60dp">
+
+        <Button
+            android:id="@+id/btnStop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/btnStats"
+            android:layout_alignStart="@+id/btnStats"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:text="Stop Monitoring"
+            android:onClick="StopMon_clicked"
+            tools:layout_editor_absoluteX="118dp"
+            tools:layout_editor_absoluteY="126dp" />
+
+        <Button
+            android:id="@+id/btnStart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/btnStop"
+            android:layout_alignLeft="@+id/btnStop"
+            android:layout_alignStart="@+id/btnStop"
+            android:layout_marginBottom="69dp"
+            android:text="Start Monitoring"
+            android:onClick="StartMon_clicked"
+            tools:layout_editor_absoluteX="83dp"
+            tools:layout_editor_absoluteY="128dp" />
+
+        <Button
+            android:id="@+id/btnStats"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/btnStop"
+            android:layout_marginLeft="110dp"
+            android:layout_marginStart="110dp"
+            android:layout_marginTop="63dp"
+            android:text="Show Statistics"
+            android:onClick="ShowStats_clicked"
+            tools:layout_editor_absoluteX="16dp"
+            tools:layout_editor_absoluteY="203dp" />
+    </RelativeLayout>
+
+</android.support.constraint.ConstraintLayout>
