@@ -1,4 +1,4 @@
-#!/usr/btestxin/env python
+#!/usr/bin/env python
 
 from python_speech_features import mfcc
 from python_speech_features import delta
@@ -15,7 +15,7 @@ testx=[]
 testy=[]
 for i in range(1,31):
 	if(i==18 or i==23 or i==19 or i == 21): #trimmed audio is too short
-		(rate,sig) = wav.read("H:/IOT/project/LandingCall-master/Audiodataset/video("+str(i)+").wav")
+		(rate,sig) = wav.read("../Audiodataset/video("+str(i)+").wav")
 	else:
 		(rate,sig) = wav.read("H:/IOT/project/python test/videotrimmed("+str(i)+").wav")
 	mfcc_feat = mfcc(sig,rate)

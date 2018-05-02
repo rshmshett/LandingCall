@@ -16,3 +16,6 @@ by Deepak, Rashmi and Sarah
 - pyqtgraph (optional, will not be needed in final version)
 - sklearn
 
+**To run newProc.py:** </br>
+cd python_speech_features</br>
+sudo python setup.py develop</br>

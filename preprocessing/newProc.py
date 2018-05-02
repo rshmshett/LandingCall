@@ -17,7 +17,6 @@
 ###################################################
 
 from __future__ import division
-
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 from scipy import signal
@@ -70,26 +69,7 @@ def rfftfreq(n, d=1.0):
     results = np.arange(0, N, dtype=int)
     return results * val
 
-
-def fft_slices(x):
-    Nslices, Npts = x.shape
-    window = np.hanning(Npts)
-
-    # Calculate FFT
-    fx = np.fft.rfft(window[np.newaxis, :] * x, axis=1)
-
-    # Convert to normalised PSD
-    Pxx = abs(fx)**2 / (np.abs(window)**2).sum()
-
-    # Scale for one-sided (excluding DC and Nyquist frequencies)
-    Pxx[:, 1:-1] *= 2
-
-    # And scale by frequency to get a result in (dB/Hz)
-    # Pxx /= Fs
-    return np.sqrt(Pxx)
-
-
-def find_peaks(Pxx):
+def find_peaks(Pxx, mfccDetails):
 ###################################################
 # this function was modified to provide the 
 # Butterworth filter with a cutoff of 0.125 Nyquist
@@ -98,7 +78,7 @@ def find_peaks(Pxx):
     #b, a = [0.01], [1, -0.99] #original parameters
     b, a= signal.butter(ORDER, 0.5, btype= 'low') #Butterworth filter
     Pxx_smooth = filtfilt(b, a, abs(Pxx))
-    #mfccCoeff= mfcc(Pxx_smooth, samplerate= FS)  
+    print mfccDetails
     peakedness = abs(Pxx) / Pxx_smooth
     model= NMF(n_components=1, init='random', random_state=0)
     res= Pxx_smooth.reshape(-1, 1)
@@ -122,6 +102,7 @@ def find_peaks(Pxx):
 
 def fft_buffer(x):
     window = np.hanning(x.shape[0])
+    mfccDetails= np.array([np.mean(mfcc(window)), np.std(mfcc(window))])
 
     # Calculate FFT
     fx = np.fft.rfft(window * x)
@@ -134,7 +115,7 @@ def fft_buffer(x):
 
     # And scale by frequency to get a result in (dB/Hz)
     # Pxx /= Fs
-    return np.sqrt(Pxx) 
+    return np.sqrt(Pxx), mfccDetails
 
 class LiveFFTWindow(pg.GraphicsWindow):
     def __init__(self, recorder):
@@ -200,9 +181,9 @@ class LiveFFTWindow(pg.GraphicsWindow):
             self.spec.setData(fillLevel=0)
             self.p2.setLabel('left', 'PSD', '1 / Hz')
 
-    def plotPeaks(self, Pxx):
+    def plotPeaks(self, Pxx, mfccDetails):
         # find peaks bigger than a certain threshold
-        peaks1, W, H = find_peaks(Pxx)
+        peaks1, W, H = find_peaks(Pxx, mfccDetails)
         peaks = [p for p in peaks1 if Pxx[p] > 0.05]
          
         if self.logScale:
@@ -229,7 +210,7 @@ class LiveFFTWindow(pg.GraphicsWindow):
             return
         data = self.recorder.get_buffer()
         weighting = np.exp(self.timeValues / self.timeValues[-1])
-        Pxx = fft_buffer(weighting * data[:, 0])
+        Pxx, mfccDetails = fft_buffer(weighting * data[:, 0])
 
         if self.downsample:
             downsample_args = dict(autoDownsample=False,
@@ -243,7 +224,7 @@ class LiveFFTWindow(pg.GraphicsWindow):
                           y=(20*np.log10(Pxx) if self.logScale else Pxx))
 
         if self.showPeaks:
-            self.plotPeaks(Pxx)
+            self.plotPeaks(Pxx, mfccDetails)
 
     def keyPressEvent(self, event):
         text = event.text()
