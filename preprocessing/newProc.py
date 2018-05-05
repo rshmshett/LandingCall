@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 ###################################################
 # Live Non Negative Matrix Decomposition
@@ -26,11 +26,15 @@ import pyqtgraph as pg
 from recorder import SoundCardDataSource
 from sklearn.decomposition import NMF
 from python_speech_features import mfcc
-
+import pickle
+from sklearn.externals import joblib
 #Global variable declarations:
 FILTER_CUTOFF= 0.125 # 0.125 Nyquist
 FS = 44000          # sampling rate
 ORDER = 5           #order of the low pass filter
+
+model= open('landingCall.pickle', 'rb')
+model= joblib.load(model)
 
 # Based on function from numpy 1.8
 def rfftfreq(n, d=1.0):
@@ -49,7 +53,7 @@ def find_peaks(Pxx, mfccDetails):
     # filter parameters
     b, a= signal.butter(ORDER, 0.5, btype= 'low') #Butterworth filter
     Pxx_smooth = filtfilt(b, a, abs(Pxx))
-    print mfccDetails
+    print(mfccDetails)
     peakedness = abs(Pxx) / Pxx_smooth
     model= NMF(n_components=1, init='random', random_state=0)
     res= Pxx_smooth.reshape(-1, 1)
@@ -57,7 +61,7 @@ def find_peaks(Pxx, mfccDetails):
     W= model.fit_transform(res)
     H= model.components_
     if H>0.2:
-        print "True" 
+        print("True") 
     # find peaky regions which are separated by more than 10 samples
     peaky_regions = nonzero(peakedness > 1)[0]
     edge_indices = nonzero(diff(peaky_regions) > 10)[0]  # RH edges of peaks
