@@ -27,11 +27,19 @@ from recorder import SoundCardDataSource
 from sklearn.decomposition import NMF
 from python_speech_features import mfcc
 import pickle
+import socket
+import struct
 from sklearn.externals import joblib
 #Global variable declarations:
 FILTER_CUTOFF= 0.125 # 0.125 Nyquist
 FS = 44000          # sampling rate
 ORDER = 5           #order of the low pass filter
+
+#Initializing socket
+sock= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#localhost=sock.gethostname()
+#localhost= sock.gethostbyname(hostname)
+sock.bind(("192.168.50.142", 8081))
 
 model= open('landingCall.pickle', 'rb')
 model= joblib.load(model)
@@ -61,6 +69,7 @@ def find_peaks(Pxx, mfccDetails):
     W= model.fit_transform(res)
     H= model.components_
     if H>0.2:
+        sock.send('1'.encode())
         print("True") 
     # find peaky regions which are separated by more than 10 samples
     peaky_regions = nonzero(peakedness > 1)[0]
