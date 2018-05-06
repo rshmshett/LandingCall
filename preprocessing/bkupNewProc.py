@@ -29,35 +29,20 @@ from python_speech_features import mfcc
 import pickle
 import socket
 import struct
-import fcntl
-
 from sklearn.externals import joblib
 #Global variable declarations:
 FILTER_CUTOFF= 0.125 # 0.125 Nyquist
 FS = 44000          # sampling rate
 ORDER = 5           #order of the low pass filter
 
-def get_ip_address(ifname):
-    print("Finding IP")
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack(bytes('256s','utf-8'), bytes(ifname[:15],'utf-8'))
-    )[20:24])
-
-
 #Initializing socket
-#sock= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #localhost=sock.gethostname()
 #localhost= sock.gethostbyname(hostname)
-#sock.bind(("192.168.50.142", 8081))
-
-
+sock.bind(("192.168.50.142", 8081))
 
 model= open('landingCall.pickle', 'rb')
 model= joblib.load(model)
-
 
 # Based on function from numpy 1.8
 def rfftfreq(n, d=1.0):
@@ -68,6 +53,36 @@ def rfftfreq(n, d=1.0):
     results = np.arange(0, N, dtype=int)
     return results * val
 
+def find_peaks(Pxx):
+###################################################
+# this function was modified to provide the 
+# Butterworth filter with a cutoff of 0.125 Nyquist
+##################################################
+    # filter parameters
+    mfccDetails= np.array([np.mean(mfcc(Pxx)), np.std(mfcc(Pxx))])
+    b, a= signal.butter(ORDER, 0.5, btype= 'low') #Butterworth filter
+    Pxx_smooth = filtfilt(b, a, abs(Pxx))
+    peakedness = abs(Pxx) / Pxx_smooth
+    model= NMF(n_components=1, init='random', random_state=0)
+    res= Pxx_smooth.reshape(-1, 1)
+    res[res<0]= 0 #substitute negative values by 0 
+    W= model.fit_transform(res)
+    H= model.components_
+    if H>0.2:
+        sock.send('1'.encode())
+        print("True") 
+    # find peaky regions which are separated by more than 10 samples
+    peaky_regions = nonzero(peakedness > 1)[0]
+    edge_indices = nonzero(diff(peaky_regions) > 10)[0]  # RH edges of peaks
+    edges = [0] + [(peaky_regions[i] + 5) for i in edge_indices]
+    if len(edges) < 2:
+        edges += [len(Pxx) - 1]
+    
+    peaks = []
+    for i in range(len(edges) - 1):
+        j, k = edges[i], edges[i+1]
+        peaks.append(j + np.argmax(peakedness[j:k]))
+    return peaks, W, H 
 
 def fft_buffer(x):
     window = np.hanning(x.shape[0])
@@ -94,12 +109,8 @@ class LiveFFTWindow(pg.GraphicsWindow):
         self.nextRow()
         # Data ranges
         self.resetRanges()
-        self.c = socket.socket() 
+        
         # Timer to update plots
-        self.c.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.c.bind((get_ip_address('wlan0'),8081))
-        self.c.listen(5)
-        self.s, self.addr = self.c.accept()     
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update)
         interval_ms = 1000 * (self.recorder.chunk_size / self.recorder.fs)
@@ -110,45 +121,10 @@ class LiveFFTWindow(pg.GraphicsWindow):
         self.timeValues = self.recorder.timeValues
         self.freqValues = rfftfreq(len(self.timeValues),
                                    1./self.recorder.fs)
-    def find_peaks(self, Pxx):
-    ###################################################
-    # this function was modified to provide the 
-    # Butterworth filter with a cutoff of 0.125 Nyquist
-    ##################################################
-        # filter parameters
-        mfccDetails= np.array([np.mean(mfcc(Pxx)), np.std(mfcc(Pxx))])
-        b, a= signal.butter(ORDER, 0.5, btype= 'low') #Butterworth filter
-        Pxx_smooth = filtfilt(b, a, abs(Pxx))
-        peakedness = abs(Pxx) / Pxx_smooth
-        model= NMF(n_components=1, init='random', random_state=0)
-        res= Pxx_smooth.reshape(-1, 1)
-        res[res<0]= 0 #substitute negative values by 0 
-        W= model.fit_transform(res)
-        H= model.components_
-        print(mfccDetails)
-        isTrue= True
-        if H>0.2 and mfccDetails[1] > 10.4:
-            while isTrue: 
-                print ('Got connection from', self.addr)
-                self.s.send(bytes('1', 'utf-8'))
-                isTrue=False
-        
-        # find peaky regions which are separated by more than 10 samples
-        peaky_regions = nonzero(peakedness > 1)[0]
-        edge_indices = nonzero(diff(peaky_regions) > 10)[0]  # RH edges of peaks
-        edges = [0] + [(peaky_regions[i] + 5) for i in edge_indices]
-        if len(edges) < 2:
-            edges += [len(Pxx) - 1]
-        
-        peaks = []
-        for i in range(len(edges) - 1):
-            j, k = edges[i], edges[i+1]
-            peaks.append(j + np.argmax(peakedness[j:k]))
-        return peaks, W, H 
    
     def plotPeaks(self, Pxx):
         # find peaks bigger than a certain threshold
-        peaks1, W, H = self.find_peaks(Pxx)
+        peaks1, W, H = find_peaks(Pxx)
         peaks = [p for p in peaks1 if Pxx[p] > 0.05]
 
 #        for p in peaks:
