@@ -36,13 +36,13 @@ FS = 44000          # sampling rate
 ORDER = 5           #order of the low pass filter
 
 #Initializing socket
-sock= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#sock= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #localhost=sock.gethostname()
 #localhost= sock.gethostbyname(hostname)
-sock.bind(("192.168.50.142", 8081))
+#sock.bind(("192.168.50.142", 8081))
 
-model= open('landingCall.pickle', 'rb')
-model= joblib.load(model)
+modelSVM= open('landingCall.pickle', 'rb')
+modelSVM= joblib.load(modelSVM)
 
 # Based on function from numpy 1.8
 def rfftfreq(n, d=1.0):
@@ -59,15 +59,21 @@ def find_peaks(Pxx):
 # Butterworth filter with a cutoff of 0.125 Nyquist
 ##################################################
     # filter parameters
-    mfccDetails= np.array([np.mean(mfcc(Pxx)), np.std(mfcc(Pxx))])
+    mfccMean = np.mean(mfcc(Pxx), axis=0)
+    mfccStd=  np.std(mfcc(Pxx), axis=0)
     b, a= signal.butter(ORDER, 0.5, btype= 'low') #Butterworth filter
     Pxx_smooth = filtfilt(b, a, abs(Pxx))
     peakedness = abs(Pxx) / Pxx_smooth
-    model= NMF(n_components=1, init='random', random_state=0)
+    modelNMF= NMF(n_components=1, init='random', random_state=0)
     res= Pxx_smooth.reshape(-1, 1)
+    
+    fvec= np.concatenate((mfccMean, mfccStd)).reshape(-1, 1)
+#    mfcc_arr= np.array(fvec)
+    print(fvec.shape) 
     res[res<0]= 0 #substitute negative values by 0 
-    W= model.fit_transform(res)
-    H= model.components_
+    W= modelNMF.fit_transform(res)
+    H= modelNMF.components_
+    SVMpred= modelSVM.predict(fvec.T)
     if H>0.2:
         sock.send('1'.encode())
         print("True") 

@@ -55,8 +55,8 @@ def get_ip_address(ifname):
 
 
 
-model= open('landingCall.pickle', 'rb')
-model= joblib.load(model)
+modelSVM= open('landingCall.pickle', 'rb')
+modelSVM= joblib.load(modelSVM)
 
 
 # Based on function from numpy 1.8
@@ -116,23 +116,30 @@ class LiveFFTWindow(pg.GraphicsWindow):
     # Butterworth filter with a cutoff of 0.125 Nyquist
     ##################################################
         # filter parameters
-        mfccDetails= np.array([np.mean(mfcc(Pxx)), np.std(mfcc(Pxx))])
+        mfccMean= np.mean(mfcc(Pxx)), axis=0)
+        mfccStd= np.std(mfcc(Pxx), axis=0)
         b, a= signal.butter(ORDER, 0.5, btype= 'low') #Butterworth filter
         Pxx_smooth = filtfilt(b, a, abs(Pxx))
         peakedness = abs(Pxx) / Pxx_smooth
-        model= NMF(n_components=1, init='random', random_state=0)
+        modelNMF= NMF(n_components=1, init='random', random_state=0)
         res= Pxx_smooth.reshape(-1, 1)
+        
+        fvec= np.concatenate((mfccMean, mfccStd)).reshape(-1, 1)
+
         res[res<0]= 0 #substitute negative values by 0 
-        W= model.fit_transform(res)
-        H= model.components_
-        print(mfccDetails)
+        W= modelNMF.fit_transform(res)
+        H= modelNMF.components_
+
+        SVMpred= modelSVM.predict(fvec.T)
+        fallSignal= False 
         isTrue= True
         if H>0.2 and mfccDetails[1] > 10.4:
+            fallSignal=True
             while isTrue: 
                 print ('Got connection from', self.addr)
                 self.s.send(bytes('1', 'utf-8'))
                 isTrue=False
-        
+        print(SVMpred, fallSignal) 
         # find peaky regions which are separated by more than 10 samples
         peaky_regions = nonzero(peakedness > 1)[0]
         edge_indices = nonzero(diff(peaky_regions) > 10)[0]  # RH edges of peaks
