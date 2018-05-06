@@ -74,9 +74,12 @@ def find_peaks(Pxx):
     W= modelNMF.fit_transform(res)
     H= modelNMF.components_
     SVMpred= modelSVM.predict(fvec.T)
+    fallDetect= False
     if H>0.2:
-        sock.send('1'.encode())
-        print("True") 
+        fallDetect= True
+        #sock.send('1'.encode())
+        print("True")
+    print(SVMpred, fallDetect)
     # find peaky regions which are separated by more than 10 samples
     peaky_regions = nonzero(peakedness > 1)[0]
     edge_indices = nonzero(diff(peaky_regions) > 10)[0]  # RH edges of peaks
