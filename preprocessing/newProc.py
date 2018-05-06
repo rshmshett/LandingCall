@@ -53,15 +53,16 @@ def rfftfreq(n, d=1.0):
     results = np.arange(0, N, dtype=int)
     return results * val
 
-def find_peaks(Pxx, mfccDetails):
+def find_peaks(Pxx):
 ###################################################
 # this function was modified to provide the 
 # Butterworth filter with a cutoff of 0.125 Nyquist
 ##################################################
     # filter parameters
+    mfccDetails= np.array([np.mean(mfcc(Pxx)), np.std(mfcc(Pxx))])
+    print(mfccDetails)
     b, a= signal.butter(ORDER, 0.5, btype= 'low') #Butterworth filter
     Pxx_smooth = filtfilt(b, a, abs(Pxx))
-    print(mfccDetails)
     peakedness = abs(Pxx) / Pxx_smooth
     model= NMF(n_components=1, init='random', random_state=0)
     res= Pxx_smooth.reshape(-1, 1)
@@ -86,7 +87,8 @@ def find_peaks(Pxx, mfccDetails):
 
 def fft_buffer(x):
     window = np.hanning(x.shape[0])
-    mfccDetails= np.array([np.mean(mfcc(window)), np.std(mfcc(window))])
+   # print(mfcc(window))
+#    mfccDetails= np.array([np.mean(mfcc(window)), np.std(mfcc(window))])
 
     # Calculate FFT
     fx = np.fft.rfft(window * x)
@@ -97,7 +99,7 @@ def fft_buffer(x):
     # Scale for one-sided (excluding DC and Nyquist frequencies)
     Pxx[1:-1] *= 2
 
-    return np.sqrt(Pxx), mfccDetails
+    return np.sqrt(Pxx)
 
 class LiveFFTWindow(pg.GraphicsWindow):
     def __init__(self, recorder):
@@ -121,19 +123,19 @@ class LiveFFTWindow(pg.GraphicsWindow):
         self.freqValues = rfftfreq(len(self.timeValues),
                                    1./self.recorder.fs)
    
-    def plotPeaks(self, Pxx, mfccDetails):
+    def plotPeaks(self, Pxx):
         # find peaks bigger than a certain threshold
-        peaks1, W, H = find_peaks(Pxx, mfccDetails)
+        peaks1, W, H = find_peaks(Pxx)
         peaks = [p for p in peaks1 if Pxx[p] > 0.05]
 
-        for p in peaks:
-            if old:
-                t = old.pop()
+#        for p in peaks:
+#            if old:
+#                t = old.pop()
 
     def update(self):
         data = self.recorder.get_buffer()
         weighting = np.exp(self.timeValues / self.timeValues[-1])
-        Pxx, mfccDetails = fft_buffer(weighting * data[:, 0])
+        Pxx = fft_buffer(weighting * data[:, 0])
 
         if self.downsample:
             downsample_args = dict(autoDownsample=False,
@@ -143,7 +145,7 @@ class LiveFFTWindow(pg.GraphicsWindow):
             downsample_args = dict(autoDownsample=True)
 
         
-        self.plotPeaks(Pxx, mfccDetails)
+        self.plotPeaks(Pxx)
 
 # Setup recorder
 recorder = SoundCardDataSource(num_chunks=3,
