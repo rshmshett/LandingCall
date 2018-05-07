@@ -29,6 +29,8 @@ from python_speech_features import mfcc
 import pickle
 import socket
 import struct
+import RPi.GPIO as GPIO
+import time
 from sklearn.externals import joblib
 #Global variable declarations:
 FILTER_CUTOFF= 0.125 # 0.125 Nyquist
@@ -41,9 +43,15 @@ ORDER = 5           #order of the low pass filter
 #localhost= sock.gethostbyname(hostname)
 #sock.bind(("192.168.50.142", 8081))
 
+filename= open('dataForAnalysis.txt', 'w')
+filename.write('SVMPred, SigProc, maxMFCC, meanMFCC, H \n')
 modelSVM= open('landingCall.pickle', 'rb')
 modelSVM= joblib.load(modelSVM)
 
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+GPIO.setup(21, GPIO.OUT)
+GPIO.setup(20, GPIO.OUT)
 # Based on function from numpy 1.8
 def rfftfreq(n, d=1.0):
     if not isinstance(n, int):
@@ -69,18 +77,25 @@ def find_peaks(Pxx):
     
     fvec= np.concatenate((mfccMean, mfccStd)).reshape(-1, 1)
 #    mfcc_arr= np.array(fvec)
-    print(fvec.shape) 
     res[res<0]= 0 #substitute negative values by 0 
     W= modelNMF.fit_transform(res)
     H= modelNMF.components_
     SVMpred= modelSVM.predict(fvec.T)
     fallDetect= False
     if H>0.2:
+        
+        GPIO.output(20, GPIO.HIGH)
+        GPIO.output(20, GPIO.LOW)
+        GPIO.output(20, GPIO.HIGH)
+        GPIO.output(20, GPIO.LOW)
+        GPIO.output(21, GPIO.LOW)
         fallDetect= True
-        #sock.send('1'.encode())
-        print("True")
-    print(SVMpred, fallDetect)
-    # find peaky regions which are separated by more than 10 samples
+
+    else:
+        GPIO.output(20, GPIO.LOW)
+        GPIO.output(21, GPIO.HIGH)
+    filename.write(str(SVMpred)+ "," + str(fallDetect) + "," + str(np.max(mfcc(Pxx))) + "," + str(mfccMean) + "," + str(np.max(H))+ "\n")
+# find peaky regions which are separated by more than 10 samples
     peaky_regions = nonzero(peakedness > 1)[0]
     edge_indices = nonzero(diff(peaky_regions) > 10)[0]  # RH edges of peaks
     edges = [0] + [(peaky_regions[i] + 5) for i in edge_indices]
