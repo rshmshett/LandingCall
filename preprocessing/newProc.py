@@ -30,12 +30,21 @@ import pickle
 import socket
 import struct
 import fcntl
+import RPi.GPIO as GPIO
 
 from sklearn.externals import joblib
 #Global variable declarations:
 FILTER_CUTOFF= 0.125 # 0.125 Nyquist
 FS = 44000          # sampling rate
 ORDER = 5           #order of the low pass filter
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+GPIO.setup(21, GPIO.OUT)
+GPIO.setup(20, GPIO.OUT)
+
+global oldH
+oldH= 0.3
 
 def get_ip_address(ifname):
     print("Finding IP")
@@ -116,7 +125,8 @@ class LiveFFTWindow(pg.GraphicsWindow):
     # Butterworth filter with a cutoff of 0.125 Nyquist
     ##################################################
         # filter parameters
-        mfccMean= np.mean(mfcc(Pxx)), axis=0)
+        global oldH
+        mfccMean= np.mean(mfcc(Pxx), axis=0)
         mfccStd= np.std(mfcc(Pxx), axis=0)
         b, a= signal.butter(ORDER, 0.5, btype= 'low') #Butterworth filter
         Pxx_smooth = filtfilt(b, a, abs(Pxx))
@@ -129,17 +139,27 @@ class LiveFFTWindow(pg.GraphicsWindow):
         res[res<0]= 0 #substitute negative values by 0 
         W= modelNMF.fit_transform(res)
         H= modelNMF.components_
-
+        
         SVMpred= modelSVM.predict(fvec.T)
         fallSignal= False 
         isTrue= True
-        if H>0.2 and mfccDetails[1] > 10.4:
+        if (H>0.1 or (H-oldH)>0.15) and np.max(mfcc(Pxx)) < 22:
             fallSignal=True
+            GPIO.output(20,GPIO.HIGH)
+            GPIO.output(20, GPIO.HIGH)
+            GPIO.output(20, GPIO.HIGH)
+            GPIO.output(20, GPIO.LOW)
+            GPIO.output(20, GPIO.HIGH)
+            GPIO.output(20, GPIO.LOW)
+            GPIO.output(21, GPIO.LOW)
+        else:
+            GPIO.output(20, GPIO.LOW)
+            GPIO.output(21, GPIO.HIGH)
             while isTrue: 
-                print ('Got connection from', self.addr)
+              #  print ('Got connection from', self.addr)
                 self.s.send(bytes('1', 'utf-8'))
                 isTrue=False
-        print(SVMpred, fallSignal) 
+        print(fallSignal) 
         # find peaky regions which are separated by more than 10 samples
         peaky_regions = nonzero(peakedness > 1)[0]
         edge_indices = nonzero(diff(peaky_regions) > 10)[0]  # RH edges of peaks
