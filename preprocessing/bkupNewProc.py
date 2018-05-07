@@ -94,7 +94,7 @@ def find_peaks(Pxx):
     else:
         GPIO.output(20, GPIO.LOW)
         GPIO.output(21, GPIO.HIGH)
-    filename.write(str(SVMpred)+ "," + str(fallDetect) + "," + str(np.max(mfcc(Pxx))) + "," + str(mfccMean) + "," + str(np.max(H))+ "\n")
+    filename.write(str(SVMpred)+ "," + str(fallDetect) + "," + str(np.max(mfcc(Pxx))) + "," + str(np.max(H))+ "\n")
 # find peaky regions which are separated by more than 10 samples
     peaky_regions = nonzero(peakedness > 1)[0]
     edge_indices = nonzero(diff(peaky_regions) > 10)[0]  # RH edges of peaks
