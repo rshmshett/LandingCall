@@ -38,18 +38,18 @@
 		$stmt->execute();
 		$stmt->bind_result($id, $event, $deviceip);
 		
-		$heroes = array(); 
+		$falls = array(); 
 		
 		while($stmt->fetch()){
-			$hero  = array();
-			$hero['id'] = $id; 
-			$hero['event'] = $event; 
-			$hero['deviceip'] = $deviceip; 
+			$fall  = array();
+			$fall['id'] = $id; 
+			$fall['event'] = $event; 
+			$fall['deviceip'] = $deviceip; 
 			
-			array_push($heroes, $hero); 
+			array_push($falls, $fall); 
 		}
 		
-		return $heroes; 
+		return $falls; 
 	}
 	
 	$response = array();
