@@ -21,11 +21,12 @@ by Deepak, Rashmi and Sarah
 **To run newProc.py:** </br>
 cd python_speech_features</br>
 sudo python setup.py develop</br>
+</br>
 
 
 ## Android Application:
 
-<br> **To run the Android App:** </br>
+**To run the Android App:** </br>
 cd Android_Code/v2LandingCall
 Using Android Studio, rebuild the application
 and install LandingCall apk on your device. 
