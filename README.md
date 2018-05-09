@@ -23,8 +23,9 @@ cd python_speech_features</br>
 sudo python setup.py develop</br>
 
 
-##Android Application:
-**To run the Android App:** </br>
+## Android Application:
+
+<br> **To run the Android App:** </br>
 cd Android_Code/v2LandingCall
 Using Android Studio, rebuild the application
 and install LandingCall apk on your device. 
